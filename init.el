@@ -77,7 +77,7 @@
   :custom ((doom-modeline-height 15)))
 
 (use-package doom-themes
-  :init (load-theme 'doom-one t))
+  :init (load-theme 'doom-one-light t))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -144,10 +144,19 @@
   (evil-set-initial-state 'messages-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal))
 
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
+(use-package magit)
+
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :init
   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  :config
   :hook (lsp-mode . lsp-enable-which-key-integration))
 
 (use-package lsp-ui
@@ -161,6 +170,21 @@
   :init (setq ccls-executable "/usr/local/bin/ccls")
   :hook ((c-mode c++-mode objc-mode cuda-mode) .
          (lambda () (require 'ccls) (lsp))))
+
+(use-package python-mode
+  :ensure t
+  :hook (python-mode . lsp-deferred))
+
+(use-package pyvenv
+  :config
+  (pyvenv-mode 1))
+
+(use-package rust-mode
+  :mode "\\.rs\\'"
+  :init (setq rust-format-on-save t))
+
+(use-package cargo
+  :defer t)
 
 (use-package company
   :after lsp-mode
@@ -202,7 +226,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (auto-dim-other-buffers default-text-scale projectile yaml-mode xclip which-key vterm use-package undo-tree treemacs-evil scala-mode sbt-mode rainbow-delimiters racer ox-gfm nord-theme nlinum-relative memoize lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful groovy-mode general flycheck-rust fill-column-indicator exec-path-from-shell ewal-doom-themes evil-terminal-cursor-changer evil-surround elpy eglot doom-modeline dash-functional counsel company-lsp company-emacs-eclim command-log-mode ccls cargo 0blayout))))
+    (python-mode evil-magit magit auto-dim-other-buffers default-text-scale projectile yaml-mode xclip which-key vterm use-package undo-tree treemacs-evil scala-mode sbt-mode rainbow-delimiters racer ox-gfm nord-theme nlinum-relative memoize lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful groovy-mode general flycheck-rust fill-column-indicator exec-path-from-shell ewal-doom-themes evil-terminal-cursor-changer evil-surround elpy eglot doom-modeline dash-functional counsel company-lsp company-emacs-eclim command-log-mode ccls cargo 0blayout))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

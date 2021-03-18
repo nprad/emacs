@@ -13,11 +13,13 @@
 ;; Set up the visible bell
 (setq visible-bell t)
 
-;;(set-face-attribute `default nil :font "Fira Code Retina" :height 280)
+(set-face-attribute `default nil :font "Fira Code Retina" :height 125)
 
 (global-set-key (kbd "<escape>") `keyboard-escape-quit)
 
-(load-theme `light-blue)
+(setq gc-cons-threshold 100000000)
+
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
 
 ;; Initialize package sources
 (require `package)
@@ -41,6 +43,45 @@
 (column-number-mode)
 (global-display-line-numbers-mode t)
 
+;; Mac specific
+(when (eq system-type 'darwin)
+  (setq ns-use-native-fullscreen t
+        mac-option-key-is-meta nil
+        mac-command-key-is-meta t
+        mac-command-modifier 'meta
+        mac-option-modifier nil
+        mac-use-title-bar nil))
+
+(use-package ligature
+  :load-path "./ligature"
+  :config
+  ;; Enable the "www" ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable traditional ligature support in eww-mode, if the
+  ;; `variable-pitch' face supports it
+  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+  ;; Enable ligatures in programming modes                                                           
+  (ligature-set-ligatures 'prog-mode '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\" "{-" "::"
+				    ":::" ":=" "!!" "!=" "!==" "-}" "----" "-->" "->" "->>"
+				    "-<" "-<<" "-~" "#{" "#[" "##" "###" "####" "#(" "#?" "#_"
+				    "#_(" ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*" "/**"
+				    "/=" "/==" "/>" "//" "///" "&&" "||" "||=" "|=" "|>" "^=" "$>"
+				    "++" "+++" "+>" "=:=" "==" "===" "==>" "=>" "=>>" "<="
+				    "=<<" "=/=" ">-" ">=" ">=>" ">>" ">>-" ">>=" ">>>" "<*"
+				    "<*>" "<|" "<|>" "<$" "<$>" "<!--" "<-" "<--" "<->" "<+"
+				    "<+>" "<=" "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<"
+				    "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
+  ;; Enables ligature checks globally in all buffers. You can also do it
+  ;; per mode with `ligature-mode'.
+  (global-ligature-mode t))
+
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+
 (use-package command-log-mode)
 
 (use-package ivy
@@ -61,6 +102,11 @@
   :config
   (ivy-mode 1))
 
+(use-package ivy-prescient
+  :after counsel
+  :config
+  (ivy-prescient-mode 1))
+
 (global-set-key (kbd "C-M-j") 'counsel-switch-buffer)
 
 ;; NOTE: The first time you load your configuration on a new machine, you'll
@@ -77,7 +123,7 @@
   :custom ((doom-modeline-height 15)))
 
 (use-package doom-themes
-  :init (load-theme 'doom-one-light t))
+  :init (load-theme 'doom-acario-light t))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -155,7 +201,7 @@
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :init
-  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  (setq lsp-keymap-prefix "C-l")  ;; Or 'C-l', 's-l'
   :config
   :hook (lsp-mode . lsp-enable-which-key-integration))
 
@@ -163,6 +209,14 @@
   :hook (lsp-mode . lsp-ui-mode)
   :custom
   (lsp-ui-doc-position 'bottom))
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+
+(use-package company-prescient
+  :after company
+  :config
+  (company-prescient-mode 1))
 
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 
@@ -197,6 +251,9 @@
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
 
+;; Install pdf-viewer
+(pdf-tools-install)
+
 (use-package avy
   :commands (avy-goto-char avy-goto-word-0 avy-goto-line))
 
@@ -215,6 +272,19 @@
   :config
   (ace-window-display-mode 1))
 
+(use-package popper
+  :ensure t ; or :straight t
+  :bind (("C-`"   . popper-toggle-latest)
+         ("M-`"   . popper-cycle)
+         ("C-M-`" . popper-toggle-type))
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          help-mode
+          compilation-mode))
+  (popper-mode +1))
+
 (use-package auto-dim-other-buffers
   :config
   (auto-dim-other-buffers-mode t))
@@ -225,8 +295,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   (quote
-    (python-mode evil-magit magit auto-dim-other-buffers default-text-scale projectile yaml-mode xclip which-key vterm use-package undo-tree treemacs-evil scala-mode sbt-mode rainbow-delimiters racer ox-gfm nord-theme nlinum-relative memoize lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful groovy-mode general flycheck-rust fill-column-indicator exec-path-from-shell ewal-doom-themes evil-terminal-cursor-changer evil-surround elpy eglot doom-modeline dash-functional counsel company-lsp company-emacs-eclim command-log-mode ccls cargo 0blayout))))
+   '(no-littering company-prescient ivy-prescient popper pdf-tools company-box python-mode evil-magit magit auto-dim-other-buffers default-text-scale projectile yaml-mode xclip which-key vterm use-package undo-tree treemacs-evil scala-mode sbt-mode rainbow-delimiters racer ox-gfm nord-theme nlinum-relative memoize lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful groovy-mode general flycheck-rust fill-column-indicator exec-path-from-shell ewal-doom-themes evil-terminal-cursor-changer evil-surround elpy eglot doom-modeline dash-functional counsel company-lsp company-emacs-eclim command-log-mode ccls cargo 0blayout)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

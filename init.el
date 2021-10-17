@@ -13,8 +13,7 @@
 ;; Set up the visible bell
 (setq visible-bell t)
 
-(set-face-attribute `default nil :font "Fira Code Retina" :height 125)
-
+(set-face-attribute `default nil :font "Fira Code Medium" :height 125)
 (global-set-key (kbd "<escape>") `keyboard-escape-quit)
 
 (setq gc-cons-threshold 100000000)
@@ -105,7 +104,11 @@
 (use-package ivy-prescient
   :after counsel
   :config
-  (ivy-prescient-mode 1))
+  (prescient-persist-mode 1))
+
+(setq prescient-sort-length-enable nil)
+
+(ivy-prescient-mode 1)
 
 (global-set-key (kbd "C-M-j") 'counsel-switch-buffer)
 
@@ -199,9 +202,14 @@
 (use-package magit)
 
 (use-package lsp-mode
-  :commands (lsp lsp-deferred)
+  :ensure
+  :commands lsp
   :init
   (setq lsp-keymap-prefix "C-l")  ;; Or 'C-l', 's-l'
+  :custom
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-idle-delay 0.6)
+  (lsp-rust-analyzer-server-display-inlay-hints t)
   :config
   :hook (lsp-mode . lsp-enable-which-key-integration))
 
@@ -213,12 +221,51 @@
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
+(use-package yasnippet
+  :config
+  (yas-global-mode 1)
+  (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand))
+
+(use-package yasnippet-snippets)
+
 (use-package company-prescient
   :after company
   :config
   (company-prescient-mode 1))
 
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+
+(use-package rustic
+  :ensure
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  ;; (setq rustic-format-on-save t)
+  ;; (setq rustic-lsp-server 'rust-analyzer)
+  ;; (setq rustic-analyzer-command '("~/.cargo/bin/rust-analyzer")))
+  (setq rustic-format-on-save t)
+  (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+
+(defun rk/rustic-mode-hook ()
+  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
+  ;; save rust buffers that are not file visiting. Once
+  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
+  ;; no longer be necessary.
+  (when buffer-file-name
+    (setq-local buffer-save-without-query t)))
 
 (use-package ccls
   :init (setq ccls-executable "/usr/local/bin/ccls")
@@ -233,13 +280,6 @@
   :config
   (pyvenv-mode 1))
 
-(use-package rust-mode
-  :mode "\\.rs\\'"
-  :init (setq rust-format-on-save t))
-
-(use-package cargo
-  :defer t)
-
 (use-package company
   :after lsp-mode
   :hook (lsp-mode . company-mode)
@@ -249,7 +289,7 @@
          ("<tab>" . company-indent-or-complete-common))
   :custom
   (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0))
+  (company-idle-delay 0.3))
 
 ;; Install pdf-viewer
 (pdf-tools-install)
@@ -288,14 +328,14 @@
 (use-package auto-dim-other-buffers
   :config
   (auto-dim-other-buffers-mode t))
-  
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(no-littering company-prescient ivy-prescient popper pdf-tools company-box python-mode evil-magit magit auto-dim-other-buffers default-text-scale projectile yaml-mode xclip which-key vterm use-package undo-tree treemacs-evil scala-mode sbt-mode rainbow-delimiters racer ox-gfm nord-theme nlinum-relative memoize lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful groovy-mode general flycheck-rust fill-column-indicator exec-path-from-shell ewal-doom-themes evil-terminal-cursor-changer evil-surround elpy eglot doom-modeline dash-functional counsel company-lsp company-emacs-eclim command-log-mode ccls cargo 0blayout)))
+   '(ripgrep yasnippet-snippets pdf-tools no-littering company-prescient ivy-prescient popper company-box python-mode evil-magit magit auto-dim-other-buffers default-text-scale projectile yaml-mode xclip which-key vterm use-package undo-tree treemacs-evil scala-mode sbt-mode rainbow-delimiters ox-gfm nord-theme nlinum-relative memoize lsp-ui lsp-ivy ivy-rich helpful groovy-mode general fill-column-indicator exec-path-from-shell ewal-doom-themes evil-terminal-cursor-changer evil-surround elpy doom-modeline dash-functional counsel company-lsp company-emacs-eclim command-log-mode ccls 0blayout rustic)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
